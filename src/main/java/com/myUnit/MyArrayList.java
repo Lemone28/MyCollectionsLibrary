@@ -1,21 +1,44 @@
 package com.myUnit;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.lang.reflect.Array;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class MyArrayList<T> implements MyList<T> {
     private static final int DEFAULT_CAPACITY = 10;
+    private static final Object[] DEFAULT_ELEMENTS = new Object[0];
     private Object[] elements;
     private int size;
 
-    public MyArrayList() {}
-    public MyArrayList(int capacity) {}
+    public MyArrayList() {
+        this.elements = DEFAULT_ELEMENTS;
+    }
+    public MyArrayList(int capacity) {
+        if (capacity < 0) {
+            throw new IllegalArgumentException("Incorrect capacity: " + capacity);
+        }
+        this.elements = (capacity > 0) ? new Object[capacity] : DEFAULT_ELEMENTS;
+    }
     public MyArrayList(Collection<? extends T> coll) {}
+
+    public void ensureCapacity(int minCapacity) {
+        if (elements == DEFAULT_ELEMENTS
+                && minCapacity <= DEFAULT_CAPACITY) return;
+
+        if (minCapacity > elements.length) {
+
+
+        }
+    }
+
+    private Object[] grow(int capacity) {
+        if (elements.length == capacity)
+            return elements;
+
+        return null;
+    }
 
     @Override
     public boolean some(Predicate<? super T> predicate) {
@@ -49,12 +72,12 @@ public class MyArrayList<T> implements MyList<T> {
 
     @Override
     public int size() {
-        return 0;
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return size == 0;
     }
 
     @Override
@@ -69,17 +92,18 @@ public class MyArrayList<T> implements MyList<T> {
 
     @Override
     public Object[] toArray() {
-        return new Object[0];
+        return elements.clone();
     }
 
     @Override
     public <T1> T1[] toArray(T1[] a) {
-        return null;
+        return (T1[])elements.clone();
     }
 
     @Override
     public boolean add(T t) {
-        return false;
+
+        return true;
     }
 
     @Override
