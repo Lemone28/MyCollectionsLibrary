@@ -1,0 +1,13 @@
+/src/main/java/TestRunPack/
+
+# IntelliJ IDEA
+.idea/
+cmake-build-*/
+out/
+.idea_modules/
+
+### Maven ###
+target/
+pom.xml.*
+/src/main/resources/
+
