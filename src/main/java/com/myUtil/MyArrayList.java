@@ -1,11 +1,13 @@
 package com.myUtil;
 
-import jdk.internal.util.ArraysSupport;
-
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.lang.reflect.Array;
+import java.util.Collection;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Iterator;
+import java.util.ListIterator;
+import java.util.Objects;
+import java.util.Arrays;
 
 public class MyArrayList<T> implements MyList<T> {
     private static final int DEFAULT_CAPACITY = 10;
@@ -25,8 +27,10 @@ public class MyArrayList<T> implements MyList<T> {
                 DEFAULT_ELEMENTS;
     }
     public MyArrayList(Collection<? extends T> coll) {
-        this.elements = DEFAULT_ELEMENTS;
-        addAll(coll);
+        Objects.requireNonNull(coll);
+        Object[] otherElements = coll.toArray();
+        this.elements = Arrays.copyOf(otherElements, otherElements.length);
+        size = coll.size();
     }
 
 
@@ -35,7 +39,8 @@ public class MyArrayList<T> implements MyList<T> {
         protected int currentIndex;
 
         public MyIterator(MyArrayList<T> list, int start) {
-            Objects.checkIndex(start, list.size());
+            if (list.size != 0)
+                Objects.checkIndex(start, list.size());
             this.list = list;
             this.currentIndex = start;
         }
@@ -115,6 +120,7 @@ public class MyArrayList<T> implements MyList<T> {
         elements[size++] = t;
         return true;
     }
+
     @Override
     public void add(int index, T element) {
         Objects.checkIndex(index, size);
@@ -151,8 +157,10 @@ public class MyArrayList<T> implements MyList<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T remove(int index) {
-        T element = (T)elements[Objects.checkIndex(index, size)];
+        Objects.checkIndex(index, size);
+        T element = (T)elements[index];
         System.arraycopy(elements, index+1, elements, index, size-index-1);
         size--;
         return element;
@@ -160,7 +168,13 @@ public class MyArrayList<T> implements MyList<T> {
 
     @Override
     public boolean contains(Object o) {
-        return indexOf(o) >= 0;
+        Iterator<T> iterator = iterator();
+        while(iterator.hasNext()) {
+            if (iterator.next().equals(o)) {
+                return true;
+            }
+        }
+        return false;
     }
     @Override
     public int indexOf(Object o) {
@@ -195,7 +209,7 @@ public class MyArrayList<T> implements MyList<T> {
 
     @Override
     public boolean addAll(Collection<? extends T> c) {
-        return addAll(size-1, c);
+        return addAll((size == 0) ? 0 : size - 1, c);
     }
 
     @Override
@@ -211,64 +225,10 @@ public class MyArrayList<T> implements MyList<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void clear() {
-        resetCapacity(0);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public boolean some(Predicate<? super T> predicate) {
-        for(int i = 0; i < size; i++) {
-            T e = (T)elements[i];
-            if (predicate.test(e)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public boolean all(Predicate<? super T> predicate) {
-        for(int i = 0; i < size; i++) {
-            T e = (T)elements[i];
-            if (!predicate.test(e)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public <R> void map(Function<? super T, ? extends R> function) {
-        map(function, x -> true);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <R> void map(Function<? super T, ? extends R> function, Predicate<? super T> predicate) {
-        for(int i = 0; i < size; i++) {
-            T oldElement = (T)elements[i];
-            if (predicate.test(oldElement)) {
-                elements[i] = (T)function.apply(oldElement);
-            }
-        }
-    }
-
-    @Override
-    public void action(Consumer<? super T> consumer) {
-        action(consumer, x -> true);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public void action(Consumer<? super T> consumer, Predicate<? super T> predicate) {
-        for(int i = 0; i < size; i++) {
-            T e = (T)elements[i];
-            if (predicate.test(e)) {
-                consumer.accept(e);
-            }
-        }
+        elements = (T[])new Object[DEFAULT_CAPACITY];
+        size = 0;
     }
 
     @Override
@@ -279,12 +239,19 @@ public class MyArrayList<T> implements MyList<T> {
     @Override
     @SuppressWarnings("unchecked")
     public <T1> T1[] toArray(T1[] a) {
-        return null;
+        if (a.length < size) {
+            a = (T1[])Array.newInstance(a.getClass().componentType(), size);
+        }
+        System.arraycopy(elements, 0, a, 0, size);
+        if (a.length > size()) {
+            a[size()] = null;
+        }
+        return a;
     }
-
 
     @Override
     public boolean retainAll(Collection<?> c) {
+
         return false;
     }
 
@@ -323,7 +290,13 @@ public class MyArrayList<T> implements MyList<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<T> subList(int fromIndex, int toIndex) {
-        return null;
+        MyArrayList<T> subList = new MyArrayList<T>(Objects.checkIndex(toIndex, size) -
+                        Objects.checkIndex(fromIndex, size));
+        for(int i = fromIndex; i <= toIndex; i++) {
+            subList.add((T)elements[i]);
+        }
+        return subList;
     }
 }

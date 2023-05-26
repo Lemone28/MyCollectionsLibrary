@@ -7,55 +7,58 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 public interface MyList<T> extends List<T> {
-    int size();
+    default boolean some(Predicate<? super T> predicate) {
+        Iterator<T> iterator = iterator();
+        while(iterator.hasNext()) {
+            if (predicate.test(iterator.next())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    default boolean all(Predicate<? super T> predicate) {
+        Iterator<T> iterator = iterator();
+        while(iterator.hasNext()) {
+            if (!predicate.test(iterator.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-    boolean isEmpty();
-
-    boolean contains(Object o);
-
-    Iterator<T> iterator();
-
-    Object[] toArray();
-
-    <T1> T1[] toArray(T1[] a);
-
-    boolean add(T t);
-
-    boolean remove(Object o);
-
-    boolean containsAll(Collection<?> c);
-
-    boolean addAll(Collection<? extends T> c);
-
-    boolean addAll(int index, Collection<? extends T> c);
-
-    boolean removeAll(Collection<?> c);
-
-    boolean retainAll(Collection<?> c);
-    void clear();
-
-    T get(int index);
-
-    T set(int index, T element);
-
-    void add(int index, T element);
-
-    T remove(int index);
-
-    int indexOf(Object o);
-
-    int lastIndexOf(Object o);
-
-    ListIterator<T> listIterator();
-
-    ListIterator<T> listIterator(int index);
-
-    List<T> subList(int fromIndex, int toIndex);
-
-    boolean some(Predicate<? super T> predicate);
-    boolean all(Predicate<? super T> predicate);
-    <R> void map(Function<? super T, ? extends R> function);
-    <R> void map(Function<? super T, ? extends R> function, Predicate<? super T> predicate);
-    void action(Consumer<? super T> consumer);
-    void action(Consumer<? super T> consumer, Predicate<? super T> predicate);
+    @SuppressWarnings("unchecked")
+    default <R> void map(Function<? super T, ? extends R> function) {
+        ListIterator<T> iterator = listIterator();
+        while(iterator.hasNext()) {
+            T oldElement = iterator.next();
+            iterator.previous();
+            iterator.set((T)function.apply(oldElement));
+        }
+    }
+    @SuppressWarnings("unchecked")
+    default <R> void map(Function<? super T, ? extends R> function, Predicate<? super T> predicate) {
+        ListIterator<T> iterator = listIterator();
+        while(iterator.hasNext()) {
+            T element = iterator.next();
+            if (predicate.test(element)) {
+                iterator.previous();
+                iterator.set((T)function.apply(element));
+            }
+        }
+    }
+    default void action(Consumer<? super T> consumer) {
+        Iterator<T> iterator = iterator();
+        while(iterator.hasNext()) {
+            consumer.accept(iterator.next());
+        }
+    }
+    default void action(Consumer<? super T> consumer, Predicate<? super T> predicate) {
+        Iterator<T> iterator = iterator();
+        while(iterator.hasNext()) {
+            T element = iterator.next();
+            if (predicate.test(element)) {
+                consumer.accept(element);
+            }
+        }
+    }
 }
