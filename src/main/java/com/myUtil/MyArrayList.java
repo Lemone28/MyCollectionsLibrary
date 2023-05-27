@@ -1,13 +1,8 @@
 package com.myUtil;
 
+import javax.lang.model.element.Element;
 import java.lang.reflect.Array;
-import java.util.Collection;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.Objects;
-import java.util.Arrays;
+import java.util.*;
 
 public class MyArrayList<T> implements MyList<T> {
     private static final int DEFAULT_CAPACITY = 10;
@@ -28,21 +23,38 @@ public class MyArrayList<T> implements MyList<T> {
     }
     public MyArrayList(Collection<? extends T> coll) {
         Objects.requireNonNull(coll);
-        Object[] otherElements = coll.toArray();
-        this.elements = Arrays.copyOf(otherElements, otherElements.length);
-        size = coll.size();
+        this.elements = DEFAULT_ELEMENTS;
+        if (!coll.isEmpty()) {
+            addAll(coll);
+        }
+    }
+    public MyArrayList(T...elements) {
+        this.elements = DEFAULT_ELEMENTS;
+        setElements(elements);
     }
 
+    static int checkIndex(int i, int size, boolean isIgnoreIndexEqualsSize) throws IllegalArgumentException {
+        if (i < 0 || i > size || (i == size && !isIgnoreIndexEqualsSize)) {
+            throw new IllegalArgumentException("Illegal index: " + i);
+        }
+        return i;
+    }
 
+    private void setElements(Object[] array) {
+        int newLength = array.length;
+        ensureCapacity(newLength);
+        System.arraycopy(array, 0, elements, 0, array.length);
+        size = newLength;
+    }
     static class MyIterator<T> implements Iterator<T> {
         protected final MyArrayList<T> list;
         protected int currentIndex;
+        protected boolean isStepNext;
 
         public MyIterator(MyArrayList<T> list, int start) {
-            if (list.size != 0)
-                Objects.checkIndex(start, list.size());
             this.list = list;
-            this.currentIndex = start;
+            this.currentIndex = MyArrayList.checkIndex(start, list.size(), list.isEmpty());
+            this.isStepNext = start != 0;
         }
         public MyIterator(MyArrayList<T> list) {
             this(list, 0);
@@ -58,15 +70,13 @@ public class MyArrayList<T> implements MyList<T> {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
+            isStepNext = true;
             return list.get(currentIndex++);
-        }
-        @Override
-        public void remove() {
-            list.remove(currentIndex - 1);
         }
     }
 
     static class MyListIterator<T> extends MyIterator<T> implements ListIterator<T> {
+
         public MyListIterator(MyArrayList<T> list, int start) {
             super(list, start);
         }
@@ -100,8 +110,14 @@ public class MyArrayList<T> implements MyList<T> {
         public void add(T t) {
             list.add(currentIndex, t);
         }
+        @Override
+        public void remove() {
+            if (!isStepNext) {
+                throw new IllegalStateException("No element to remove or next() has not been called");
+            }
+            list.remove(currentIndex-1);
+        }
     }
-
 
     @Override
     public int size() {
@@ -123,8 +139,7 @@ public class MyArrayList<T> implements MyList<T> {
 
     @Override
     public void add(int index, T element) {
-        Objects.checkIndex(index, size);
-
+        checkIndex(index, size, true);
         if (size == elements.length)
             grow();
         System.arraycopy(elements, index, elements, index+1, size-index);
@@ -135,14 +150,14 @@ public class MyArrayList<T> implements MyList<T> {
     @Override
     @SuppressWarnings("unchecked")
     public T get(int index) {
-        Objects.checkIndex(index, size);
+        checkIndex(index, size, false);
         return (T)elements[index];
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public T set(int index, T element) {
-        Objects.checkIndex(index, size);
+        checkIndex(index, size, false);
         T oldElement = (T)elements[index];
         elements[index] = element;
         return oldElement;
@@ -159,7 +174,7 @@ public class MyArrayList<T> implements MyList<T> {
     @Override
     @SuppressWarnings("unchecked")
     public T remove(int index) {
-        Objects.checkIndex(index, size);
+        checkIndex(index, size, false);
         T element = (T)elements[index];
         System.arraycopy(elements, index+1, elements, index, size-index-1);
         size--;
@@ -208,19 +223,51 @@ public class MyArrayList<T> implements MyList<T> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends T> c) {
-        return addAll((size == 0) ? 0 : size - 1, c);
+    public boolean addAll(Collection<? extends T> coll) {
+        return addAll(size, coll);
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends T> c) {
-        Objects.checkIndex(index, size);
-        Object[] otherElements = Objects.requireNonNull(c).toArray();
+    public boolean addAll(int index, Collection<? extends T> coll) {
+        Objects.requireNonNull(coll);
+        checkIndex(index, size, true);
+
+        Object[] otherElements = coll.toArray();
+        int newCapacity = otherElements.length + elements.length;
+        if (newCapacity == 0) return false;
+
+        Object[] oldElements = elements;
+        elements = new Object[newCapacity];
+
+        System.arraycopy(oldElements, 0, elements, 0, index);
+        System.arraycopy(otherElements, 0, elements, index, coll.size());
+        System.arraycopy(oldElements, index, elements, index + coll.size(), size - index);
+        size += otherElements.length;
         return true;
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
+    public boolean removeAll(Collection<?> coll) {
+        Objects.requireNonNull(coll);
+
+        int sizeBefore = size;
+        int writeIndex = 0;
+        for (int readIndex = 0; readIndex < size; readIndex++) {
+            Object element = elements[readIndex];
+            if (!coll.contains(element)) {
+                elements[writeIndex++] = element;
+            }
+        }
+
+        int newSize = writeIndex;
+        if (newSize != sizeBefore) {
+            for (int i = newSize; i < size; i++) {
+                elements[i] = null;
+            }
+            size = newSize;
+            return true;
+        }
+
         return false;
     }
 
@@ -250,29 +297,31 @@ public class MyArrayList<T> implements MyList<T> {
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
+    public boolean retainAll(Collection<?> coll) {
+        Objects.requireNonNull(coll);
+        boolean modified = false;
 
-        return false;
-    }
-
-    public void ensureCapacity(int minCapacity) {
-        if (elements == DEFAULT_ELEMENTS
-                && minCapacity <= DEFAULT_CAPACITY) return;
-        else if (minCapacity > elements.length) {
-            resetCapacity(minCapacity);
+        for(int i = 0; i < size; i++) {
+            if (!coll.contains(elements[i])) {
+                remove(i--);
+                modified = true;
+            }
         }
+
+        return modified;
     }
 
     private void grow() {
-        resetCapacity(size+1);
+        ensureCapacity(size+1);
     }
-    private void resetCapacity(int minCapacity) {
-        int oldCapacity = elements.length;
-        if (oldCapacity > 0 || elements != DEFAULT_ELEMENTS) {
-            final int newCapacity = size * 2;
+    public void ensureCapacity(int minCapacity) {
+        int currentCapacity = elements.length;
+        if (minCapacity > currentCapacity) {
+            int newCapacity = currentCapacity + (currentCapacity >> 1);
+            if (newCapacity < minCapacity) {
+                newCapacity = minCapacity;
+            }
             elements = Arrays.copyOf(elements, newCapacity);
-        } else {
-            elements = new Object[Math.max(minCapacity, DEFAULT_CAPACITY)];
         }
     }
 
@@ -292,11 +341,47 @@ public class MyArrayList<T> implements MyList<T> {
     @Override
     @SuppressWarnings("unchecked")
     public List<T> subList(int fromIndex, int toIndex) {
-        MyArrayList<T> subList = new MyArrayList<T>(Objects.checkIndex(toIndex, size) -
-                        Objects.checkIndex(fromIndex, size));
+        if (isEmpty() || fromIndex == toIndex) {
+            return new MyArrayList<T>();
+        } else if (Objects.checkIndex(fromIndex, size) >
+                Objects.checkIndex(toIndex, size)) {
+            throw new IllegalArgumentException("The start index is greater than the end index");
+        }
+        MyArrayList<T> subList = new MyArrayList<T>(toIndex - fromIndex);
         for(int i = fromIndex; i <= toIndex; i++) {
             subList.add((T)elements[i]);
         }
         return subList;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        else if (!(o instanceof MyList)) return false;
+        return equalsList((MyList<?>)o);
+    }
+
+    private boolean equalsList(MyList<?> otherList) {
+        if (size != otherList.size())
+            return false;
+        Object[] otherArray = otherList.toArray();
+        for(int i = 0; i < size; i++) {
+            if (!Objects.equals(elements[i], otherArray[i]) ||
+                    elements[i].getClass() != otherArray[i].getClass()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder("[");
+        for(int i = 0; i < size; i++) {
+            if (builder.length() > 1) builder.append(", ");
+            builder.append(elements[i]);
+        }
+        builder.append("]");
+        return builder.toString();
     }
 }
