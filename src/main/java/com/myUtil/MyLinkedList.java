@@ -227,7 +227,7 @@ public class MyLinkedList<T> implements MyList<T>, Deque<T> {
         Object[] _values = new Object[size];
         Node<T> n = head;
         for(int i = 0; n != null;) {
-            _values[i++] = n;
+            _values[i++] = n.value;
             n = n.next;
         }
         return _values;

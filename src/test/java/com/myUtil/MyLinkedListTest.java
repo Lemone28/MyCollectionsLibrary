@@ -2,6 +2,7 @@ package com.myUtil;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,51 +22,121 @@ public class MyLinkedListTest {
     }
 
     @Test
-    public void size() {
+    public void testSize() {
         MyLinkedList<String> list1 = new MyLinkedList<String>();
         MyLinkedList<String> list2 = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+
         assertEquals(0, list1.size());
         assertEquals(3, list2.size());
     }
 
     @Test
-    void isEmpty() {
+    public void testiIEmpty() {
         MyLinkedList<String> list = new MyLinkedList<String>();
         assertTrue(list.isEmpty());
     }
 
     @Test
-    void contains() {
+    public void testGet() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
 
+        assertEquals("com", list.get(0));
+        assertEquals(".", list.get(1));
+        assertEquals("myUtil", list.get(2));
     }
 
     @Test
-    void iterator() {
+    public void testSet() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+
+        list.set(0, "org");
+        list.set(list.size()-1, "java");
+        list.set(1, ",");
+
+        assertEquals("org", list.get(0));
+        assertEquals(",", list.get(1));
+        assertEquals("java", list.get(2));
     }
 
     @Test
-    void descendingIterator() {
+    public void testContains() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+
+        assertTrue(list.contains("com"));
+        assertTrue(list.contains("myUtil"));
+        assertFalse(list.contains("java"));
     }
 
     @Test
-    void toArray() {
+    public void testAdd() {
+        MyLinkedList<String> list = new MyLinkedList<String>();
+        list.add("One");
+        list.add("Two");
+        list.add("Three");
+
+        assertEquals("One", list.get(0));
+        assertEquals("Two", list.get(1));
+        assertEquals("Three", list.get(2));
     }
 
     @Test
-    void testToArray() {
+    void testAddLast() {
+        MyLinkedList<String> list = new MyLinkedList<String>();
+        list.addLast("One");
+        list.addLast("Two");
+        list.addLast("Three");
+
+        assertEquals("One", list.get(0));
+        assertEquals("Two", list.get(1));
+        assertEquals("Three", list.get(2));
+    }
+
+    @Test
+    public void testIerator() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+        Iterator<String> iterator = list.iterator();
+
+        assertTrue(iterator.hasNext());
+        assertEquals("com", iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(".", iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals("myUtil", iterator.next());
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    public void testDescendingIterator() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+        Iterator<String> iterator = list.descendingIterator();
+
+        assertTrue(iterator.hasNext());
+        assertEquals("myUtil", iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals(".", iterator.next());
+        assertTrue(iterator.hasNext());
+        assertEquals("com", iterator.next());
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    public void testToArray() {
+        String[] testArray = {"com", ".", "myUtil"};
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+
+        assertArrayEquals(testArray, list.toArray());
+    }
+
+    @Test
+    void testToArray2() {
+
     }
 
     @Test
     void addFirst() {
     }
 
-    @Test
-    void add() {
-    }
 
-    @Test
-    void addLast() {
-    }
 
     @Test
     void offerFirst() {
@@ -172,15 +243,7 @@ public class MyLinkedListTest {
     }
 
     @Test
-    void get() {
-    }
-
-    @Test
-    void set() {
-    }
-
-    @Test
-    void testAdd() {
+    void testAddIndex() {
     }
 
     @Test
