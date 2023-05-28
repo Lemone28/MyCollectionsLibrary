@@ -158,8 +158,9 @@ public class MyLinkedList<T> implements MyList<T>, Deque<T> {
         this.head = null;
         this.tail = null;
     }
-    public MyLinkedList(Collection<?> coll) {
-
+    public MyLinkedList(Collection<? extends T> coll) {
+        this();
+        addAll(size, coll);
     }
 
     static int checkIndex(int i, int size, boolean isIgnoreIndexEqualsSize) {
@@ -578,13 +579,36 @@ public class MyLinkedList<T> implements MyList<T>, Deque<T> {
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
-        return false;
+    public boolean removeAll(Collection<?> coll) {
+        if (coll.isEmpty()) return false;
+
+        boolean modified = false;
+        Iterator<?> iterator = iterator();
+        while(iterator.hasNext()) {
+            Object element = iterator.next();
+            if (coll.contains(element)) {
+                modified = remove(element);
+            }
+        }
+        return modified;
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
-        return false;
+    public boolean retainAll(Collection<?> coll) {
+        if (coll.isEmpty()) {
+            clear();
+            return true;
+        }
+
+        boolean modified = false;
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()) {
+            T element = iterator.next();
+            if (!coll.contains(element)) {
+                modified = remove(element);
+            }
+        }
+        return modified;
     }
 
     @Override
@@ -597,6 +621,7 @@ public class MyLinkedList<T> implements MyList<T>, Deque<T> {
             node = nn;
         }
         head = null;
+        size = 0;
     }
 
     @Override
