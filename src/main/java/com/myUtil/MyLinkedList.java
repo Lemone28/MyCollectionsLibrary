@@ -375,8 +375,7 @@ public class MyLinkedList<T> implements MyList<T>, Deque<T> {
 
     @Override
     public T remove() {
-        final Node<T> h = unlinkFirst(true, true);
-        return h.value;
+        return removeFirst();
     }
     @Override
     public boolean remove(Object o) {
@@ -587,8 +586,7 @@ public class MyLinkedList<T> implements MyList<T>, Deque<T> {
     }
     @Override
     public T pop() {
-        final Node<T> h = unlinkFirst(true, true);
-        return h.value;
+        return removeFirst();
     }
 
     @Override

@@ -55,6 +55,13 @@ public class MyLinkedListTest {
 
         assertEquals("com", list.getFirst());
     }
+
+    @Test
+    void peek() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+
+        assertEquals("com", list.getFirst());
+    }
     @Test
     void peekFirst() {
         MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
@@ -97,6 +104,18 @@ public class MyLinkedListTest {
         assertTrue(list.contains("com"));
         assertTrue(list.contains("myUtil"));
         assertFalse(list.contains("java"));
+    }
+
+    @Test
+    void push() {
+        MyLinkedList<String> list = new MyLinkedList<String>();
+        list.addFirst("One");
+        list.addFirst("Two");
+        list.addFirst("Three");
+
+        assertEquals("Three", list.get(0));
+        assertEquals("Two", list.get(1));
+        assertEquals("One", list.get(2));
     }
     @Test
     void testAddLast() {
@@ -251,18 +270,26 @@ public class MyLinkedListTest {
     }
 
     @Test
-    public void pollFirst() {
+    public void testPollFirst() {
         MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
 
-
+        assertEquals("com", list.pollFirst());
+        assertEquals(".", list.pollFirst());
+        assertEquals("myUtil", list.pollFirst());
+        assertTrue(list.isEmpty());
     }
     @Test
-    public void pollLast() {
+    public void testPollLast() {
         MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+
+        assertEquals("myUtil", list.pollLast());
+        assertEquals(".", list.pollLast());
+        assertEquals("com", list.pollLast());
+        assertTrue(list.isEmpty());
     }
 
     @Test
-    void removeFirstOccurrence() {
+    public void testRemoveFirstOccurrence() {
         MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil", "com"));
 
         assertTrue(list.removeFirstOccurrence("com"));
@@ -272,9 +299,8 @@ public class MyLinkedListTest {
         assertTrue(list.removeFirstOccurrence("myUtil"));
         assertEquals("com", list.get(0));
     }
-
     @Test
-    void removeLastOccurrence() {
+    public void testRemoveLastOccurrence() {
         MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil", "com"));
 
         assertTrue(list.removeLastOccurrence("com"));
@@ -285,58 +311,118 @@ public class MyLinkedListTest {
         assertEquals("com", list.get(list.size()-1));
     }
 
+    @Test
+    public void testRemove() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
 
+        assertEquals("com", list.remove());
+        assertEquals(".", list.remove());
+        assertEquals("myUtil", list.remove());
+        assertTrue(list.isEmpty());
+    }
+    @Test
+    void testRemoveWithElement() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+
+        assertTrue(list.remove("com"));
+        assertTrue(list.remove("myUtil"));
+        assertTrue(list.remove("."));
+        assertTrue(list.isEmpty());
+    }
 
     @Test
-    void remove() {
+    public void testRemoveWithIndex() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+
+        assertEquals("myUtil", list.remove(list.size()-1));
+        assertEquals("com", list.remove(0));
+        assertEquals(".", list.remove(0));
+
+        assertTrue(list.isEmpty());
     }
 
     @Test
     void poll() {
-    }
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
 
-    @Test
-    void testRemove() {
+        assertEquals("com", list.poll());
+        assertEquals(".", list.poll());
+        assertEquals("myUtil", list.poll());
+        assertTrue(list.isEmpty());
     }
 
     @Test
     void containsAll() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+
+        assertTrue(list.containsAll(List.of("com", "myUtil")));
+        assertFalse(list.containsAll(List.of("org", ".")));
     }
 
     @Test
-    void addAll() {
-    }
+    void testAddAllWithCollection() {
+        MyLinkedList<String> list = new MyLinkedList<String>();
 
-    @Test
-    void push() {
-    }
+        list.addLast("com");
+        list.addAll(List.of(".", "myUtil"));
 
+        assertEquals("com", list.get(0));
+        assertEquals(".", list.get(1));
+        assertEquals("myUtil", list.get(2));
+    }
     @Test
-    void peek() {
+    void testAddAllWithIndexAndCollection() {
+        MyLinkedList<String> list = new MyLinkedList<String>();
+
+        list.addAll(list.size(), List.of("myUtil"));
+        list.addAll(0, List.of("com"));
+        list.addAll(list.size(), List.of("."));
+
+        assertEquals(3, list.size());
+        assertEquals("com", list.get(0));
+        assertEquals("myUtil", list.get(1));
+        assertEquals(".", list.get(2));
     }
 
     @Test
     void pop() {
-    }
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
 
-    @Test
-    void testAddAll() {
+        list.removeFirst();
+        assertEquals(".", list.get(0));
+        list.removeFirst();
+        assertEquals("myUtil", list.get(0));
+        list.removeFirst();
+        assertTrue(list.isEmpty());
     }
 
     @Test
     void removeAll() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+
+        assertTrue(list.removeAll(List.of(".", "myUtil")));
+
+        assertEquals(1, list.size());
+        assertEquals("com", list.get(0));
     }
 
     @Test
     void retainAll() {
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
+
+        assertTrue(list.retainAll(List.of("myUtil")));
+
+        assertEquals(1, list.size());
+        assertEquals("myUtil", list.get(0));
     }
 
     @Test
     void clear() {
-    }
+        MyLinkedList<String> list = new MyLinkedList<String>(List.of("com", ".", "myUtil"));
 
-    @Test
-    void testRemove1() {
+        list.clear();
+
+        assertTrue(list.isEmpty());
     }
 
     @Test
