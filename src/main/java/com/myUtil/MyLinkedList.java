@@ -163,6 +163,15 @@ public class MyLinkedList<T> implements MyList<T>, Deque<T> {
         addAll(size, coll);
     }
 
+    public T getNodeFirst(T element) {
+        Node<T> node = nodeFromValueFirst(head, element);
+        return (node == null) ? null:node.value;
+    }
+    public T getNodeLast(T element) {
+        Node<T> node = nodeFromValueLast(tail, element);
+        return (node == null) ? null:node.value;
+    }
+
     static int checkIndex(int i, int size, boolean isIgnoreIndexEqualsSize) {
         if (i < 0 || i > size || (i == size && !isIgnoreIndexEqualsSize)) {
             throw new IllegalArgumentException("Illegal index: " + i);
@@ -276,25 +285,29 @@ public class MyLinkedList<T> implements MyList<T>, Deque<T> {
     @Override
     public void add(int index, T element) {
         checkIndex(index, size, true);
-        nodeTo(index, head, element);
+        nodeTo(index, element);
         size++;
     }
 
-    private void nodeTo(int index, Node<T> node, T element) {
-        if (index != 0) {
-            nodeTo(index-1, node.next, element);
-            return;
+    private void nodeTo(int index, T element) {
+        Node<T> h = head;
+        for(int i = 0; h != null && i < index; i++) {
+            h = h.next;
         }
+
         Node<T> newNode = new Node<T>(element, null, null);
-        if (node == null) {
-            Node.bind(tail, newNode);
-            tail = newNode;
-        } else if (node.previous != null) {
-            Node.bind(node.previous, newNode);
-            Node.bind(newNode, node);
-        } else {
-            Node.bind(newNode, node);
-            head = newNode;
+        if (h == null) {
+            if (head == null) {
+                head = newNode;
+                tail = newNode;
+            }
+            else {
+                Node.bind(tail, newNode);
+                tail = newNode;
+            }
+        } else if (h.previous != null) {
+            Node.bind(h.previous, newNode);
+            Node.bind(newNode, h);
         }
     }
 
@@ -383,7 +396,7 @@ public class MyLinkedList<T> implements MyList<T>, Deque<T> {
     private Node<T> nodeFromValueFirst(Node<T> node, T element) {
         if (node == null)
             return null;
-        else if (Objects.equals(node.value, element))
+        else if (node.value.equals(element))
             return node;
         return nodeFromValueFirst(node.next, element);
     }
@@ -475,13 +488,13 @@ public class MyLinkedList<T> implements MyList<T>, Deque<T> {
 
     @Override
     public boolean removeLastOccurrence(Object o) {
-        Node<T> node = nodeFromValueLast(head, (T)o);
+        Node<T> node = nodeFromValueLast(tail, (T)o);
         if (node == null) return false;
 
-        if (node == head) {
-            unlinkFirst(false, true);
-        } else if (node == tail) {
+        if (node == tail) {
             unlinkLast(false, true);
+        } else if (node == head) {
+            unlinkFirst(false, true);
         } else {
             Node.unlink(node);
             size--;
@@ -645,16 +658,35 @@ public class MyLinkedList<T> implements MyList<T>, Deque<T> {
 
     @Override
     public List<T> subList(int fromIndex, int toIndex) {
-        checkIndex(fromIndex, size, false);
-        checkIndex(toIndex, size, false);
-
-        MyLinkedList<T> sublist = new MyLinkedList<T>();
-        ListIterator<T> iterator = listIterator(fromIndex);
-
-        for(int i = 0; i < toIndex;) {
-            T element = iterator.next();
-            sublist.add(element);
+        if (isEmpty() || fromIndex == toIndex) {
+            return new MyArrayList<T>();
+        } else if (checkIndex(fromIndex, size, false) >
+                checkIndex(toIndex, size, false)) {
+            throw new IllegalArgumentException("The start index is greater than the end index");
         }
-        return sublist;
+        MyLinkedList<T> subList = new MyLinkedList<T>();
+        ListIterator<T> iterator = listIterator(fromIndex);
+        for(int i = fromIndex; i <= toIndex; i++) {
+            subList.add(iterator.next());
+        }
+        return subList;
     }
+//    public List<T> subList(int fromIndex, int toIndex) {
+//        checkIndex(fromIndex, size, false);
+//        checkIndex(toIndex, size, false);
+//
+//        MyLinkedList<T> sublist = new MyLinkedList<T>();
+//
+//        if (fromIndex >= toIndex) {
+//            return sublist;
+//        }
+//
+//        ListIterator<T> iterator = listIterator(fromIndex);
+//
+//        for(int i = fromIndex; i < toIndex; i++) {
+//            T element = iterator.next();
+//            sublist.add(element);
+//        }
+//        return sublist;
+//    }
 }
